@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset=utf-8>
+</head>
+
+<body>
+<script src="jquery-3.4.1.js"></script>
+<script type="text/javascript" src='remix.js'></script>
+<script type="text/javascript">
+
+var url = 'http://static.echonest.com/infinite_jukebox_data/TRGCAFB13FBCBF0C0B.json'
+var trackURL = 'http://static.echonest.com/audio2/1373261136656/Robin%20Thicke%20-%20Blurred%20Lines%20ft.%20T.I.%20Pharrell%20.mp3'
+
+var remixer;
+var player;
+var track;
+var remixed;
+
+function savefunc(file) {
+    var a = document.createElement("a"), url = URL.createObjectURL(file);
+        a.href = url;
+        // a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);  
+        }, 0); 
+}
+
+function init() {
+    console.log(document.hasStorageAccess());
+    console.log(localStorage);
+
+    var contextFunction = window.AudioContext || window.webkitAudioContext;
+    if (contextFunction === undefined) {
+        $("#info").text("Sorry, this app needs advanced web audio. Your browser doesn't"
+            + " support it. Try the latest version of Chrome?");
+    } else {
+        var context = new contextFunction();
+        remixer = createJRemixer(context, $, apiKey);
+        player = remixer.getPlayer();
+        $("#info").text("Loading analysis data...");
+
+        remixer.remixTrackById(url, trackURL, function(t, percent) {
+            track = t;
+
+            $("#info").text(percent + "% of the track loaded");
+            if (percent == 100) {
+                $("#info").text(percent + "% of the track loaded, remixing...");
+            }
+
+            if (track.status == 'ok') {
+                remixed = new Array();
+                // Do the remixing here!
+                for (var i=0; i < track.analysis.beats.length; i++) {
+                    if (i % 2 == 0) {
+                        remixed.push(track.analysis.beats[i])
+                    }
+                }
+                $("#info").text("Remix complete!");
+            }
+        });
+    }
+}
+
+window.onload = init;
+</script>
+
+Welcome to everyOtherBeat.html
+<div id='info'> </div>
+<button onClick="player.play(0, remixed);">Play!</button>
+<button onClick="player.stop()">Stop!</button>
+<button onClick="remixer.saveRemixLocally(remixed, savefunc)">Save!</button>
+</body>
+
+</html>
